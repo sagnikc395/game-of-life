@@ -9,21 +9,24 @@ ROWS = 25
 ALIVE = '*'
 DEAD = '.'
 
+# GRID CELLS is just COLS * ROWS
+GRID_CELLS = COLS * ROWS
+
 
 # the function sets the specified sell at x,y to the specified state 
 def set_cell(grid: str,x: int,y: int,state: int):
-    grid[y*COLS+x] = state
+    grid[cell_to_index(x,y)] = state
 
 
 # returns the state of the grid at x,y 
 def get_cell(grid: str,x: int,y: int):
-    return grid[y*COLS+x]
+    return grid[cell_to_index(x,y)]
 
 
 # translate the specified x,y grid point into a index in the linear array
 # this function implements wrapping, so both negative and positive coordinates
 # that are out of the grid will wrap around  
-def cell_to_offset(x: int,y: int):
+def cell_to_index(x: int,y: int):
     if x >= COLS:
         x = x % COLS
     if y >= ROWS:
@@ -32,11 +35,11 @@ def cell_to_offset(x: int,y: int):
     # for the negative case
     if x < 0:
         x = (-x) % COLS 
-        x = COLS + x
+        x = COLS - x
 
     if y < 0:
         y = (-y) % ROWS
-        y = ROWS + y 
+        y = ROWS - y 
     
 
     return y*COLS+x
@@ -47,7 +50,8 @@ def print_grid(grid: str):
     print("\x1b[3J\x1b[H\x1b[2J",end='')
     for y in range(0,ROWS):
         for x in range(0,COLS):
-            print(f"{get_cell(grid,x,y)}")
+            print(f"{get_cell(grid,x,y)}",end='')
+        print('\n',end='')
 
 
 # set all the grid cells to the specified state
@@ -62,9 +66,9 @@ def count_living_neighbours(grid: str,x: int,y: int):
     alive = 0
     for y0 in range(-1,2):
         for x0 in range(-1,2):
-            if (x0 ==0 and y0 == 0):
+            if (x0 == 0 and y0 == 0):
                 continue
-            if get_cell(grid,x+x0,y+y0) == ALIVE:
+            if (get_cell(grid,x+x0,y+y0) == ALIVE):
                 alive+=1
 
     return alive  
@@ -75,8 +79,8 @@ def compute_new_state(old: str, new: str):
         for x in range(0,COLS):
             n_alive = count_living_neighbours(old,x,y)
             new_state = DEAD
-            if get_cell(old,x,y) == ALIVE:
-                if n_alive == 2 or n_alive == 3:
+            if (get_cell(old,x,y) == ALIVE):
+                if(n_alive == 2 or n_alive == 3):
                     new_state = ALIVE
             else:
                 if n_alive == 3:
@@ -85,7 +89,6 @@ def compute_new_state(old: str, new: str):
             set_cell(new,x,y,new_state)
 
 def main():
-    GRID_CELLS = ROWS * COLS 
     old_grid = [''] * GRID_CELLS
     new_grid = [''] * GRID_CELLS
 
@@ -99,10 +102,10 @@ def main():
     while True:
         compute_new_state(old_grid,new_grid)
         print_grid(new_grid)
-        time.sleep(100_000)
+        time.sleep(100)
         compute_new_state(new_grid,old_grid)
         print_grid(old_grid)
-        time.sleep(100_000)        
+        time.sleep(100)        
 
     
 
